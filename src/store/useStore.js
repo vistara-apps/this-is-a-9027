@@ -161,4 +161,8 @@ export const useStore = create((set, get) => ({
     const state = get()
     return state.layouts.find(layout => layout.id === layoutId)
   },
+
+  updateUser: (updates) => set((state) => ({
+    user: { ...state.user, ...updates }
+  })),
 }))
