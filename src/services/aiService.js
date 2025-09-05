@@ -1,4 +1,6 @@
 import OpenAI from 'openai'
+import { calculatePerformanceMetrics } from './performanceService'
+import { checkBuildingCodeCompliance } from './buildingCodesService'
 
 // Initialize OpenAI with your API key
 const openai = new OpenAI({
@@ -44,6 +46,7 @@ Guidelines:
 - Consider building codes and accessibility requirements
 - Position rooms on a coordinate system (0,0 is top-left)
 - Use reasonable dimensions (offices: 100-400 sqft, meeting rooms: 150-300 sqft, etc.)
+- Ensure corridor widths meet accessibility standards (minimum 4 feet)
 
 Return only the JSON object, no other text.`
 
@@ -64,23 +67,37 @@ Return only the JSON object, no other text.`
     // Try to parse the JSON response
     try {
       const layoutData = JSON.parse(responseText)
-      return layoutData
+      
+      // Calculate performance metrics for the generated layout
+      const performanceMetrics = calculatePerformanceMetrics(layoutData, {
+        buildingOrientation: { facing: 'south' },
+        accessibility: normSettings
+      })
+      
+      // Check building code compliance
+      const complianceResults = await checkBuildingCodeCompliance(layoutData, normSettings)
+      
+      return {
+        ...layoutData,
+        performanceMetrics,
+        complianceResults
+      }
     } catch (parseError) {
       console.error('Failed to parse AI response as JSON:', parseError)
       
       // Fallback to a default layout structure if parsing fails
-      return generateFallbackLayout(scheduleData)
+      return generateFallbackLayout(scheduleData, normSettings)
     }
     
   } catch (error) {
     console.error('Error calling OpenAI API:', error)
     
     // Fallback to a default layout if API fails
-    return generateFallbackLayout(scheduleData)
+    return generateFallbackLayout(scheduleData, normSettings)
   }
 }
 
-function generateFallbackLayout(scheduleData) {
+async function generateFallbackLayout(scheduleData, normSettings = {}) {
   // Generate a simple fallback layout based on common architectural patterns
   const rooms = []
   const circulation = []
@@ -142,16 +159,31 @@ function generateFallbackLayout(scheduleData) {
     })
   }
   
-  // Add basic circulation between rooms
+  // Add basic circulation between rooms with accessibility-compliant widths
   for (let i = 0; i < rooms.length - 1; i++) {
     circulation.push({
       from: rooms[i].id,
       to: rooms[i + 1].id,
-      width: 6
+      width: 6 // 6 feet to meet accessibility requirements
     })
   }
   
-  return { rooms, circulation }
+  const layoutData = { rooms, circulation }
+  
+  // Calculate performance metrics for fallback layout
+  const performanceMetrics = calculatePerformanceMetrics(layoutData, {
+    buildingOrientation: { facing: 'south' },
+    accessibility: normSettings
+  })
+  
+  // Check building code compliance for fallback layout
+  const complianceResults = await checkBuildingCodeCompliance(layoutData, normSettings)
+  
+  return {
+    ...layoutData,
+    performanceMetrics,
+    complianceResults
+  }
 }
 
 export async function optimizeLayoutParameters(layoutData, parameters) {

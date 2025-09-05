@@ -7,28 +7,22 @@ on:
     branches: [ main, master ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: '22'
-        cache: 'npm'
         
-        - name: Install dependencies
-      run: npm install
-
-    - name: Build application
-      run: npm run build
-      env:
-        NODE_OPTIONS: --max-old-space-size=4096
+    - name: Install and Build
+      run: |
+        npm install
+        npm run build
         
     - name: Deploy to Vercel (Production)
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && secrets.VERCEL_TOKEN != ''
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -37,13 +31,17 @@ jobs:
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
         
     - name: Deploy to Vercel (Preview)
-      if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master'
+      if: (github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master') && secrets.VERCEL_TOKEN != ''
       uses: amondnet/vercel-action@v25
       with:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-args: '--no-wait'
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        
+    - name: Build completed successfully
+      if: secrets.VERCEL_TOKEN == ''
+      run: echo "✅ Build completed successfully! Vercel deployment skipped (no VERCEL_TOKEN configured)."
         
     - name: Comment PR with deployment URL
       if: github.event_name == 'pull_request'

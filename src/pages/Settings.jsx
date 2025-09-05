@@ -10,6 +10,7 @@ import {
   Settings as SettingsIcon
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
+import { BillingAndSubscriptionManager } from '../components/BillingAndSubscriptionManager'
 
 export function Settings() {
   const { user } = useStore()
@@ -155,63 +156,7 @@ export function Settings() {
             )}
 
             {activeTab === 'subscription' && (
-              <div className="space-y-6">
-                <div className="card">
-                  <h2 className="text-xl font-semibold text-text mb-6">Current Plan</h2>
-                  <div className="flex items-center space-x-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <Crown className="w-8 h-8 text-green-600" />
-                    <div>
-                      <h3 className="font-semibold text-green-900">Pro Plan</h3>
-                      <p className="text-green-700">$79/month • Billing monthly</p>
-                      <p className="text-sm text-green-600">Next billing date: February 15, 2024</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="card">
-                  <h2 className="text-xl font-semibold text-text mb-6">Available Plans</h2>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {plans.map((plan) => (
-                      <div
-                        key={plan.name}
-                        className={`border rounded-lg p-6 ${
-                          plan.current 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                      >
-                        <div className="text-center mb-6">
-                          <h3 className="text-lg font-semibold text-text">{plan.name}</h3>
-                          <div className="mt-2">
-                            <span className="text-3xl font-bold text-text">{plan.price}</span>
-                            <span className="text-gray-600">/{plan.period}</span>
-                          </div>
-                        </div>
-                        
-                        <ul className="space-y-3 mb-6">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="flex items-start">
-                              <Check className="w-4 h-4 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
-                              <span className="text-sm text-gray-600">{feature}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        
-                        <button
-                          className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-                            plan.current
-                              ? 'bg-gray-100 text-gray-600 cursor-default'
-                              : 'btn-primary'
-                          }`}
-                          disabled={plan.current}
-                        >
-                          {plan.current ? 'Current Plan' : 'Upgrade'}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <BillingAndSubscriptionManager />
             )}
 
             {activeTab === 'notifications' && (
