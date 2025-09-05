@@ -1,5 +1,4 @@
 name: Deploy to Vercel
-# Fixed build issues - retrigger workflow
 
 on:
   push:
@@ -8,37 +7,19 @@ on:
     branches: [ main, master ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
       
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    - uses: actions/setup-node@v4
       with:
         node-version: '22'
         
-    - name: Debug environment
+    - name: Install and Build
       run: |
-        echo "Node version: $(node --version)"
-        echo "NPM version: $(npm --version)"
-        echo "Working directory: $(pwd)"
-        ls -la
-        
-    - name: Install dependencies
-      run: |
-        echo "Installing dependencies..."
         npm install
-        echo "Dependencies installed successfully"
-
-    - name: Build application
-      run: |
-        echo "Starting build process..."
         npm run build
-        echo "Build completed successfully"
-      env:
-        NODE_OPTIONS: --max-old-space-size=4096
         
     - name: Deploy to Vercel (Production)
       if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && secrets.VERCEL_TOKEN != ''
